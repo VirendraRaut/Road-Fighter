@@ -490,12 +490,18 @@ kbd {
   justify-content: flex-start;
   background: #000;
   padding: 0;
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
 }
 
 /* HUD */
 #hud {
   width: 100%;
-  height: var(--hud-height);
+  height: var(--hud-height, 56px);
+  min-height: 44px;
+  max-height: 64px;
   background: rgba(7, 9, 15, 0.92);
   border-bottom: 1px solid var(--c-border);
   display: flex;
@@ -505,7 +511,9 @@ kbd {
   flex-shrink: 0;
   z-index: 10;
   backdrop-filter: blur(4px);
+  position: relative;
 }
+
 .hud-left,
 .hud-right {
   display: flex;
@@ -619,11 +627,23 @@ kbd {
 /* Canvas - FULL responsive */
 #game-canvas {
   display: block;
-  flex: 1;
   width: 100%;
   height: 100%;
   image-rendering: pixelated;
   background: #0a0e14;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#canvas-container {
+  flex: 1;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  min-height: 0; /* Important for flex */
+  height: calc(100vh - var(--hud-height, 56px));
+  height: calc(100dvh - var(--hud-height, 56px));
 }
 
 /* Mobile controls */
@@ -636,15 +656,24 @@ kbd {
   justify-content: space-between;
   padding: clamp(0.4rem, 1vh, 0.8rem) clamp(0.8rem, 2vw, 2rem);
   padding-bottom: max(clamp(0.4rem, 1vh, 0.8rem), env(safe-area-inset-bottom));
-  background: rgba(7, 9, 15, 0.7);
+  background: rgba(7, 9, 15, 0.85);
   border-top: 1px solid var(--c-border);
   backdrop-filter: blur(8px);
   z-index: 20;
   gap: clamp(0.5rem, 2vw, 2rem);
+  height: var(--mobile-control-height, 72px);
+  min-height: 56px;
+  max-height: 90px;
+  pointer-events: none; /* Allow clicks to pass through to canvas */
 }
+
+#mobile-controls .mobile-btn {
+  pointer-events: auto; /* Buttons still work */
+}
+
 .mobile-btn {
   flex: 1;
-  height: var(--mobile-control-height);
+  height: 100%;
   max-width: 200px;
   background: rgba(0, 230, 255, 0.08);
   border: 2px solid var(--c-cyan-dim);
@@ -657,10 +686,117 @@ kbd {
     transform 0.08s;
   touch-action: manipulation;
   -webkit-touch-callout: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
 }
+
 .mobile-btn:active {
   background: rgba(0, 230, 255, 0.2);
   transform: scale(0.96);
+}
+
+/* ── Responsive adjustments ── */
+@media (pointer: coarse), (max-width: 1024px) {
+  #mobile-controls {
+    display: flex;
+  }
+
+  #canvas-container {
+    height: calc(
+      100vh - var(--hud-height, 56px) - var(--mobile-control-height, 72px)
+    );
+    height: calc(
+      100dvh - var(--hud-height, 56px) - var(--mobile-control-height, 72px)
+    );
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --hud-height: 48px;
+    --mobile-control-height: 64px;
+  }
+
+  #mobile-controls {
+    padding: 0.3rem 0.8rem;
+    min-height: 56px;
+  }
+
+  .mobile-btn {
+    max-width: 120px;
+    font-size: 1rem;
+    border-radius: 8px;
+  }
+}
+
+@media (max-height: 600px) {
+  :root {
+    --hud-height: 40px;
+    --mobile-control-height: 50px;
+  }
+
+  #mobile-controls {
+    padding: 0.2rem 0.5rem;
+    min-height: 44px;
+  }
+
+  .mobile-btn {
+    font-size: 0.8rem;
+    border-width: 1px;
+  }
+
+  #hud {
+    min-height: 36px;
+    padding: 0 0.3rem;
+  }
+
+  .hud-value {
+    font-size: 0.7rem;
+  }
+
+  .hud-label {
+    font-size: 0.35rem;
+  }
+}
+
+/* Landscape mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --hud-height: 36px;
+    --mobile-control-height: 44px;
+  }
+
+  #mobile-controls {
+    padding: 0.1rem 0.5rem;
+    min-height: 40px;
+  }
+
+  .mobile-btn {
+    max-width: 80px;
+    font-size: 0.7rem;
+    border-radius: 4px;
+  }
+
+  #hud {
+    min-height: 32px;
+    padding: 0 0.3rem;
+  }
+
+  .hud-value {
+    font-size: 0.6rem;
+  }
+
+  #canvas-container {
+    height: calc(
+      100vh - var(--hud-height, 36px) - var(--mobile-control-height, 44px)
+    );
+    height: calc(
+      100dvh - var(--hud-height, 36px) - var(--mobile-control-height, 44px)
+    );
+  }
 }
 
 /* Pause overlay */
