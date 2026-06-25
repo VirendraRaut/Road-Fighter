@@ -1,24 +1,25 @@
 /**
  * audioManager.js
  * ───────────────
- * Centralized audio management for Road Fighter.
- * Handles: autoplay policy, muting, looping background music,
- * one-shot SFX, volume control, and audio pooling for rapid SFX.
- * Includes fallback synthesised sounds when files are missing.
+ * Road Fighter Audio Manager - Completely self-contained
  */
 
-const AudioManager = (() => {
-  // ── State ───────────────────────────────
-  let _muted = false;
-  let _unlocked = false;
-  let _bgTrack = null;
-  let _bgTrackName = null;
-  let _initialized = false;
+// Use var instead of const to avoid hoisting issues
+var AudioManager = (function () {
+  "use strict";
 
-  const _sfxPool = {};
+  console.log("📢 AudioManager initializing...");
+
+  // ── State ───────────────────────────────
+  var _muted = false;
+  var _unlocked = false;
+  var _bgTrack = null;
+  var _bgTrackName = null;
+  var _initialized = false;
+  var _sfxPool = {};
 
   // ── Asset paths ─────────────────────────
-  const TRACKS = {
+  var TRACKS = {
     start: "audio/game_start.mp3",
     race: "audio/race_running.mp3",
     crash: "audio/crash.mp3",
@@ -26,7 +27,7 @@ const AudioManager = (() => {
     coin: "audio/coin.mp3",
   };
 
-  const VOLUMES = {
+  var VOLUMES = {
     start: 0.7,
     race: 0.35,
     crash: 0.6,
@@ -35,14 +36,15 @@ const AudioManager = (() => {
   };
 
   // ── Web Audio context for fallback sounds ──
-  let _audioCtx = null;
+  var _audioCtx = null;
 
   function getAudioContext() {
     if (!_audioCtx) {
       try {
         _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        console.log("✅ Web Audio context created");
       } catch (e) {
-        console.warn("Web Audio not supported");
+        console.warn("Web Audio not supported:", e.message);
         return null;
       }
     }
@@ -51,19 +53,29 @@ const AudioManager = (() => {
 
   // ── Synthesised fallback sounds ──────────
   function playSynthesisedSound(type) {
-    const ctx = getAudioContext();
-    if (!ctx) return;
+    console.log("🔊 Playing synthesised sound:", type);
+
+    var ctx = getAudioContext();
+    if (!ctx) {
+      console.warn("No audio context available");
+      return;
+    }
 
     try {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+      // Resume context if suspended
+      if (ctx.state === "suspended") {
+        ctx.resume().catch(function (e) {});
+      }
+
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
 
-      const now = ctx.currentTime;
-      let freq = 440;
-      let duration = 0.3;
-      let volume = 0.3;
+      var now = ctx.currentTime;
+      var freq = 440;
+      var duration = 0.3;
+      var volume = 0.3;
 
       switch (type) {
         case "coin":
@@ -131,21 +143,23 @@ const AudioManager = (() => {
           osc.stop(now + 0.2);
       }
     } catch (e) {
-      // Silently fail
+      console.warn("Failed to play synthesised sound:", e.message);
     }
   }
 
   // ── Pre-load all SFX ────────────────────
   function preload() {
-    ["crash", "coin", "gameover", "start"].forEach((key) => {
+    console.log("Preloading audio files...");
+    ["crash", "coin", "gameover", "start"].forEach(function (key) {
       if (!TRACKS[key]) return;
       try {
-        const audio = new Audio(TRACKS[key]);
+        var audio = new Audio(TRACKS[key]);
         audio.preload = "auto";
-        audio.volume = VOLUMES[key] ?? 0.7;
+        audio.volume = VOLUMES[key] || 0.7;
         _sfxPool[key] = audio;
+        console.log("  ✅ Preloaded:", key);
       } catch (e) {
-        // File doesn't exist, we'll use fallback
+        console.warn("  ⚠️ Could not preload:", key, e.message);
         _sfxPool[key] = null;
       }
     });
@@ -156,17 +170,19 @@ const AudioManager = (() => {
   function unlockOnInteraction() {
     if (_unlocked) return;
 
-    const unlock = () => {
+    var unlock = function () {
       _unlocked = true;
+      console.log("🔓 Audio unlocked by user interaction");
+
       document.removeEventListener("touchstart", unlock, true);
       document.removeEventListener("touchend", unlock, true);
       document.removeEventListener("click", unlock, true);
       document.removeEventListener("keydown", unlock, true);
 
       // Resume Web Audio context if suspended
-      const ctx = getAudioContext();
+      var ctx = getAudioContext();
       if (ctx && ctx.state === "suspended") {
-        ctx.resume().catch(() => {});
+        ctx.resume().catch(function (e) {});
       }
     };
 
@@ -184,31 +200,34 @@ const AudioManager = (() => {
 
   // ── Play background music ───────────────
   function playBg(name) {
-    if (!TRACKS[name]) return;
+    console.log("🎵 Playing background:", name);
+
+    if (!TRACKS[name]) {
+      console.warn("Track not found:", name);
+      return;
+    }
 
     stopBg();
 
-    // Try to load the audio file
     try {
-      const audio = new Audio(TRACKS[name]);
+      var audio = new Audio(TRACKS[name]);
       audio.loop = name === "race";
-      audio.volume = _muted ? 0 : (VOLUMES[name] ?? 0.5);
+      audio.volume = _muted ? 0 : VOLUMES[name] || 0.5;
       audio.preload = "auto";
 
       _bgTrack = audio;
       _bgTrackName = name;
 
-      const playPromise = audio.play();
+      var playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // File not found or autoplay blocked — use fallback
+        playPromise.catch(function () {
+          console.warn("Failed to play audio file, using fallback");
           _bgTrack = null;
-          // Play a simple tone instead
           playFallbackBg(name);
         });
       }
     } catch (e) {
-      // File doesn't exist — use fallback
+      console.warn("Error playing background:", e.message);
       playFallbackBg(name);
     }
   }
@@ -216,13 +235,17 @@ const AudioManager = (() => {
   // ── Fallback background music ────────────
   function playFallbackBg(name) {
     if (name === "race" && !_muted) {
-      // Create a simple looping tone for race
-      const ctx = getAudioContext();
+      console.log("🎵 Using fallback background tone");
+      var ctx = getAudioContext();
       if (!ctx) return;
 
       try {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+        if (ctx.state === "suspended") {
+          ctx.resume().catch(function (e) {});
+        }
+
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
 
@@ -233,32 +256,31 @@ const AudioManager = (() => {
         osc.frequency.linearRampToValueAtTime(130, ctx.currentTime + 1.5);
         osc.frequency.linearRampToValueAtTime(110, ctx.currentTime + 2);
 
-        gain.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.5);
-        gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 1);
+        gain.gain.setValueAtTime(0.06, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 0.5);
+        gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 1);
 
         osc.start(ctx.currentTime);
-        // We'll keep it running and loop it manually
+
         _bgTrack = {
-          stop: () => {
-            osc.stop();
+          stop: function () {
+            try {
+              osc.stop();
+            } catch (e) {}
           },
-          volume: 0.08,
-          pause: () => {
-            // No-op for fallback
-          },
+          pause: function () {},
           currentTime: 0,
         };
         _bgTrackName = "race";
 
         // Restart after 2 seconds
-        setTimeout(() => {
+        setTimeout(function () {
           if (_bgTrack && _bgTrackName === "race" && !_muted) {
             playFallbackBg("race");
           }
         }, 2000);
       } catch (e) {
-        // Silently fail
+        console.warn("Fallback background failed:", e.message);
       }
     }
   }
@@ -266,9 +288,9 @@ const AudioManager = (() => {
   // ── Stop background music ────────────────
   function stopBg() {
     if (_bgTrack) {
-      if (_bgTrack.stop) {
+      if (typeof _bgTrack.stop === "function") {
         _bgTrack.stop();
-      } else {
+      } else if (typeof _bgTrack.pause === "function") {
         _bgTrack.pause();
         _bgTrack.currentTime = 0;
       }
@@ -279,20 +301,30 @@ const AudioManager = (() => {
 
   // ── Play one-shot SFX ───────────────────
   function playSfx(name) {
-    if (_muted || !TRACKS[name]) return;
+    if (_muted) {
+      console.log("🔇 Sound muted, skipping:", name);
+      return;
+    }
+
+    if (!TRACKS[name]) {
+      console.warn("SFX not found:", name);
+      return;
+    }
+
+    console.log("🔊 Playing SFX:", name);
 
     // Try to use pooled audio first
-    const pooled = _sfxPool[name];
+    var pooled = _sfxPool[name];
     if (pooled) {
       try {
         pooled.currentTime = 0;
-        pooled.volume = _muted ? 0 : (VOLUMES[name] ?? 0.7);
-        const promise = pooled.play();
-        if (promise)
-          promise.catch(() => {
-            // File not found — use fallback
+        pooled.volume = _muted ? 0 : VOLUMES[name] || 0.7;
+        var promise = pooled.play();
+        if (promise) {
+          promise.catch(function () {
             playSynthesisedSound(name);
           });
+        }
         return;
       } catch (e) {
         // Error playing — use fallback
@@ -301,13 +333,14 @@ const AudioManager = (() => {
 
     // Try creating fresh audio
     try {
-      const audio = new Audio(TRACKS[name]);
-      audio.volume = VOLUMES[name] ?? 0.7;
-      const promise = audio.play();
-      if (promise)
-        promise.catch(() => {
+      var audio = new Audio(TRACKS[name]);
+      audio.volume = VOLUMES[name] || 0.7;
+      var promise = audio.play();
+      if (promise) {
+        promise.catch(function () {
           playSynthesisedSound(name);
         });
+      }
       return;
     } catch (e) {
       // File not found — use fallback
@@ -320,6 +353,8 @@ const AudioManager = (() => {
   // ── Toggle mute ─────────────────────────
   function toggleMute() {
     _muted = !_muted;
+    console.log("🔇 Mute toggled:", _muted);
+
     if (_bgTrack) {
       if (_bgTrackName && VOLUMES[_bgTrackName] !== undefined) {
         _bgTrack.volume = _muted ? 0 : VOLUMES[_bgTrackName];
@@ -331,7 +366,9 @@ const AudioManager = (() => {
   }
 
   function setMuted(val) {
-    _muted = val;
+    _muted = !!val;
+    console.log("🔇 Mute set to:", _muted);
+
     if (_bgTrack) {
       if (_bgTrackName && VOLUMES[_bgTrackName] !== undefined) {
         _bgTrack.volume = _muted ? 0 : VOLUMES[_bgTrackName];
@@ -347,41 +384,64 @@ const AudioManager = (() => {
 
   // ── Init ────────────────────────────────
   function init() {
-    if (_initialized) return;
+    if (_initialized) {
+      console.log("AudioManager already initialized");
+      return;
+    }
+
+    console.log("🎵 AudioManager initializing...");
     preload();
     unlockOnInteraction();
 
     // Resume Web Audio context on any interaction
-    const resumeCtx = () => {
-      const ctx = getAudioContext();
+    var resumeCtx = function () {
+      var ctx = getAudioContext();
       if (ctx && ctx.state === "suspended") {
-        ctx.resume().catch(() => {});
+        ctx.resume().catch(function (e) {});
       }
     };
+
     document.addEventListener("click", resumeCtx, { once: true });
     document.addEventListener("touchstart", resumeCtx, { once: true });
     document.addEventListener("keydown", resumeCtx, { once: true });
+
+    console.log("✅ AudioManager initialized");
   }
 
   // ── Test sound (for debugging) ──────────
   function testSound() {
+    console.log("🔊 Testing sound...");
     if (_muted) {
-      console.log("Sound is muted");
-      return;
+      console.log("🔇 Sound is muted, toggling...");
+      toggleMute();
     }
-    console.log("Testing sound...");
-    playSfx("coin");
+    // Try to play a test sound
+    try {
+      playSfx("coin");
+    } catch (e) {
+      console.error("Test sound failed:", e);
+    }
   }
 
-  // Public API
-  return {
-    init,
-    playBg,
-    stopBg,
-    playSfx,
-    toggleMute,
-    setMuted,
-    isMuted,
-    testSound,
+  // ── Public API ──────────────────────────
+  var publicAPI = {
+    init: init,
+    playBg: playBg,
+    stopBg: stopBg,
+    playSfx: playSfx,
+    toggleMute: toggleMute,
+    setMuted: setMuted,
+    isMuted: isMuted,
+    testSound: testSound,
   };
+
+  console.log("✅ AudioManager ready");
+  return publicAPI;
 })();
+
+// Double-check it's defined
+if (typeof AudioManager !== "undefined") {
+  console.log("✅ AudioManager successfully defined globally");
+} else {
+  console.error("❌ AudioManager not defined!");
+}

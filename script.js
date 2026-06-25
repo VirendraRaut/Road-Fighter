@@ -4,6 +4,41 @@
  * Main entry point — initialises assets, audio, UI, and starts the game.
  */
 
+/**
+ * script.js - Main entry point
+ */
+
+// Fallback if AudioManager failed to load
+if (typeof AudioManager === "undefined") {
+  console.warn("⚠️ AudioManager not loaded, creating fallback");
+  window.AudioManager = {
+    init: function () {
+      console.log("Fallback AudioManager init");
+    },
+    playBg: function () {
+      console.log("Fallback playBg");
+    },
+    stopBg: function () {
+      console.log("Fallback stopBg");
+    },
+    playSfx: function () {
+      console.log("Fallback playSfx");
+    },
+    toggleMute: function () {
+      return false;
+    },
+    setMuted: function () {},
+    isMuted: function () {
+      return false;
+    },
+    testSound: function () {
+      console.log("Fallback testSound");
+    },
+  };
+}
+
+// Rest of your script.js code...
+
 document.addEventListener("DOMContentLoaded", () => {
   console.log("🚀 Road Fighter starting...");
 

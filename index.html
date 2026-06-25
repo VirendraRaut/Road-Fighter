@@ -223,10 +223,41 @@
     </div>
 
     <!-- Scripts (order matters) -->
-    <script src="audioManager.js"></script>
+    <!-- <script src="audioManager.js"></script>
     <script src="assets.js"></script>
     <script src="game.js"></script>
     <script src="ui.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js"></script> -->
+    <!-- Scripts with proper loading order and error handling -->
+    <script>
+      // Check if scripts load properly
+      window.scriptLoadErrors = [];
+      window.addEventListener(
+        "error",
+        function (e) {
+          if (e.target.tagName === "SCRIPT") {
+            console.error("Script failed to load:", e.target.src);
+            window.scriptLoadErrors.push(e.target.src);
+          }
+        },
+        true,
+      );
+    </script>
+
+    <script
+      src="audioManager.js"
+      onerror="console.error('❌ Failed to load audioManager.js')"></script>
+    <script
+      src="assets.js"
+      onerror="console.error('❌ Failed to load assets.js')"></script>
+    <script
+      src="game.js"
+      onerror="console.error('❌ Failed to load game.js')"></script>
+    <script
+      src="ui.js"
+      onerror="console.error('❌ Failed to load ui.js')"></script>
+    <script
+      src="script.js"
+      onerror="console.error('❌ Failed to load script.js')"></script>
   </body>
 </html>

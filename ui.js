@@ -5,15 +5,20 @@
  * and DOM interactions for Road Fighter.
  */
 
-const UI = (() => {
+// Use var to avoid hoisting issues
+var UI = (function () {
+  "use strict";
+
+  console.log("🎨 UI initializing...");
+
   // ── DOM refs ────────────────────────────
-  const screens = {
+  var screens = {
     home: document.getElementById("screen-home"),
     game: document.getElementById("screen-game"),
     gameover: document.getElementById("screen-gameover"),
   };
 
-  const hud = {
+  var hud = {
     score: document.getElementById("hud-score"),
     highscore: document.getElementById("hud-highscore"),
     lives: document.getElementById("hud-lives"),
@@ -21,127 +26,142 @@ const UI = (() => {
     coins: document.getElementById("hud-coins"),
   };
 
-  const home = {
+  var home = {
     highScore: document.getElementById("home-high-score"),
     soundBtn: document.getElementById("btn-sound"),
     soundIcon: document.getElementById("sound-icon"),
   };
 
-  const gameover = {
+  var gameover = {
     score: document.getElementById("go-score"),
     high: document.getElementById("go-high"),
     coins: document.getElementById("go-coins"),
     badge: document.getElementById("new-record-badge"),
   };
 
-  const pauseOverlay = document.getElementById("overlay-pause");
-  const modalHow = document.getElementById("modal-how");
+  var pauseOverlay = document.getElementById("overlay-pause");
+  var modalHow = document.getElementById("modal-how");
 
   // ── Screen transitions ──────────────────
   function showHome() {
+    console.log("🏠 Showing home screen");
     hideAllScreens();
-    screens.home.classList.remove("hidden");
-    screens.home.classList.add("active");
-    // Update home high score
-    const high = Game.loadHighScore();
+    if (screens.home) {
+      screens.home.classList.remove("hidden");
+      screens.home.classList.add("active");
+    }
+    var high = 0;
+    if (typeof Game !== "undefined" && Game.loadHighScore) {
+      high = Game.loadHighScore();
+    }
     updateHomeHighScore(high);
-    // Ensure game screen is reset
-    document.getElementById("overlay-pause").classList.add("hidden");
+    if (pauseOverlay) {
+      pauseOverlay.classList.add("hidden");
+    }
   }
 
   function showGame() {
+    console.log("🎮 Showing game screen");
     hideAllScreens();
-    screens.game.classList.remove("hidden");
-    screens.game.classList.add("active");
-    // Reset pause overlay
-    pauseOverlay.classList.add("hidden");
+    if (screens.game) {
+      screens.game.classList.remove("hidden");
+      screens.game.classList.add("active");
+    }
+    if (pauseOverlay) {
+      pauseOverlay.classList.add("hidden");
+    }
   }
 
   function showGameOver(data) {
+    console.log("💀 Game Over:", data);
     hideAllScreens();
-    screens.gameover.classList.remove("hidden");
-    screens.gameover.classList.add("active");
+    if (screens.gameover) {
+      screens.gameover.classList.remove("hidden");
+      screens.gameover.classList.add("active");
+    }
 
-    // Update stats
-    gameover.score.textContent = data.score;
-    gameover.high.textContent = data.highScore;
-    gameover.coins.textContent = "🪙 " + data.coins;
+    if (gameover.score) gameover.score.textContent = data.score || 0;
+    if (gameover.high) gameover.high.textContent = data.highScore || 0;
+    if (gameover.coins) gameover.coins.textContent = "🪙 " + (data.coins || 0);
 
-    // Show/hide new record badge
-    if (data.isRecord) {
+    if (data.isRecord && gameover.badge) {
       gameover.badge.classList.remove("hidden");
-      // Trigger celebration effect
       spawnConfetti();
-    } else {
+    } else if (gameover.badge) {
       gameover.badge.classList.add("hidden");
     }
   }
 
   function hideAllScreens() {
-    Object.values(screens).forEach((screen) => {
-      screen.classList.remove("active");
-      screen.classList.add("hidden");
+    Object.values(screens).forEach(function (screen) {
+      if (screen) {
+        screen.classList.remove("active");
+        screen.classList.add("hidden");
+      }
     });
   }
 
   // ── HUD updates ─────────────────────────
   function updateScore(score, highScore) {
-    hud.score.textContent = score;
-    hud.highscore.textContent = highScore;
+    if (hud.score) hud.score.textContent = score || 0;
+    if (hud.highscore) hud.highscore.textContent = highScore || 0;
   }
 
   function updateLives(lives) {
-    const hearts =
+    if (!hud.lives) return;
+    var hearts =
       "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3 - lives));
     hud.lives.textContent = hearts;
   }
 
   function updateFuel(fuelPercent) {
-    const bar = hud.fuel;
-    const clamped = Math.max(0, Math.min(100, fuelPercent));
-    bar.style.width = clamped + "%";
-
-    // Critical fuel warning
+    if (!hud.fuel) return;
+    var clamped = Math.max(0, Math.min(100, fuelPercent));
+    hud.fuel.style.width = clamped + "%";
     if (clamped < 25) {
-      bar.classList.add("critical");
+      hud.fuel.classList.add("critical");
     } else {
-      bar.classList.remove("critical");
+      hud.fuel.classList.remove("critical");
     }
   }
 
   function updateCoins(coinCount) {
-    hud.coins.textContent = "🪙 " + coinCount;
+    if (hud.coins) hud.coins.textContent = "🪙 " + (coinCount || 0);
   }
 
   function updateHomeHighScore(highScore) {
-    home.highScore.textContent = highScore || "0";
+    if (home.highScore) home.highScore.textContent = highScore || "0";
   }
 
   function updateSoundIcon(muted) {
-    const icon = home.soundIcon;
-    icon.textContent = muted ? "🔇" : "🔊";
-    // Also update the game sound button if it exists
-    const gameSoundBtn = document.getElementById("btn-sound-game");
-    if (gameSoundBtn) {
-      gameSoundBtn.textContent = muted ? "🔇" : "🔊";
-    }
+    var icon = home.soundIcon;
+    if (icon) icon.textContent = muted ? "🔇" : "🔊";
+
+    var gameSoundBtn = document.getElementById("btn-sound-game");
+    if (gameSoundBtn) gameSoundBtn.textContent = muted ? "🔇" : "🔊";
   }
 
   // ── Modal controls ──────────────────────
   function showHowTo() {
-    modalHow.classList.remove("hidden");
-    modalHow.style.opacity = "1";
+    if (modalHow) {
+      modalHow.classList.remove("hidden");
+      modalHow.style.opacity = "1";
+    }
   }
 
   function hideHowTo() {
-    modalHow.classList.add("hidden");
-    modalHow.style.opacity = "0";
+    if (modalHow) {
+      modalHow.classList.add("hidden");
+      modalHow.style.opacity = "0";
+    }
   }
 
-  // ── Confetti effect for new record ──────
+  // ── Confetti effect ──────────────────────
   function spawnConfetti() {
-    const container = document.getElementById("go-particles");
-    const colors = [
+    var container = document.getElementById("go-particles");
+    if (!container) return;
+
+    var colors = [
       "#ffd93d",
       "#ff6b1a",
       "#ff3860",
@@ -150,13 +170,13 @@ const UI = (() => {
       "#a855f7",
     ];
 
-    for (let i = 0; i < 80; i++) {
-      const el = document.createElement("div");
-      const size = 6 + Math.random() * 8;
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 3 + Math.random() * 6;
-      const x = window.innerWidth / 2;
-      const y = window.innerHeight / 2;
+    for (var i = 0; i < 80; i++) {
+      var el = document.createElement("div");
+      var size = 6 + Math.random() * 8;
+      var angle = Math.random() * Math.PI * 2;
+      var speed = 3 + Math.random() * 6;
+      var x = window.innerWidth / 2;
+      var y = window.innerHeight / 2;
 
       el.style.cssText = `
         position: absolute;
@@ -175,63 +195,67 @@ const UI = (() => {
 
       container.appendChild(el);
 
-      // Animate with requestAnimationFrame
-      let startTime = Date.now();
-      const duration = 1500 + Math.random() * 1000;
-      const dx = Math.cos(angle) * speed;
-      const dy = Math.sin(angle) * speed - 1;
+      var startTime = Date.now();
+      var duration = 1500 + Math.random() * 1000;
+      var dx = Math.cos(angle) * speed;
+      var dy = Math.sin(angle) * speed - 1;
 
-      function animateConfetti() {
-        const elapsed = Date.now() - startTime;
-        const progress = elapsed / duration;
+      (function (element, dx, dy, x, y, duration, startTime) {
+        function animateConfetti() {
+          var elapsed = Date.now() - startTime;
+          var progress = elapsed / duration;
 
-        if (progress >= 1) {
-          el.remove();
-          return;
+          if (progress >= 1) {
+            element.remove();
+            return;
+          }
+
+          var currentX = x + dx * progress * 200;
+          var currentY = y + dy * progress * 200 + 100 * progress * progress;
+          var opacity = 1 - progress;
+
+          element.style.left = currentX + "px";
+          element.style.top = currentY + "px";
+          element.style.opacity = opacity;
+          element.style.transform =
+            "rotate(" +
+            360 * progress +
+            "deg) scale(" +
+            (1 - progress * 0.5) +
+            ")";
+
+          requestAnimationFrame(animateConfetti);
         }
-
-        const currentX = x + dx * progress * 200;
-        const currentY = y + dy * progress * 200 + 100 * progress * progress;
-        const opacity = 1 - progress;
-
-        el.style.left = currentX + "px";
-        el.style.top = currentY + "px";
-        el.style.opacity = opacity;
-        el.style.transform = `rotate(${360 * progress}deg) scale(${1 - progress * 0.5})`;
-
-        requestAnimationFrame(animateConfetti);
-      }
-
-      setTimeout(animateConfetti, i * 15);
+        setTimeout(animateConfetti, i * 15);
+      })(el, dx, dy, x, y, duration, startTime);
     }
 
-    // Clean up after animation
-    setTimeout(() => {
+    setTimeout(function () {
       container.innerHTML = "";
     }, 4000);
   }
 
   // ── Init ────────────────────────────────
   function init() {
-    // Set initial sound icon
-    updateSoundIcon(AudioManager.isMuted());
-    // Show home screen by default
+    console.log("🎨 UI initializing...");
+    updateSoundIcon(false);
     showHome();
+    console.log("✅ UI initialized");
   }
 
-  // Public API
+  // ── Public API ──────────────────────────
   return {
-    init,
-    showHome,
-    showGame,
-    showGameOver,
-    updateScore,
-    updateLives,
-    updateFuel,
-    updateCoins,
-    updateHomeHighScore,
-    updateSoundIcon,
-    showHowTo,
-    hideHowTo,
+    init: init,
+    showHome: showHome,
+    showGame: showGame,
+    showGameOver: showGameOver,
+    updateScore: updateScore,
+    updateLives: updateLives,
+    updateFuel: updateFuel,
+    updateCoins: updateCoins,
+    updateHomeHighScore: updateHomeHighScore,
+    updateSoundIcon: updateSoundIcon,
+    showHowTo: showHowTo,
+    hideHowTo: hideHowTo,
   };
 })();
