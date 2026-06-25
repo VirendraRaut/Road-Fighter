@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Road Fighter</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- ═══════════════════════════════════════════
+       HOME SCREEN
+  ═══════════════════════════════════════════ -->
+    <div id="screen-home" class="screen active">
+      <div class="home-bg-grid"></div>
+      <div class="home-bg-lines"></div>
+
+      <header class="home-header">
+        <div class="logo-wrap">
+          <span class="logo-top">ROAD</span>
+          <span class="logo-bottom">FIGHTER</span>
+          <div class="logo-glow"></div>
+        </div>
+        <p class="logo-tagline">SURVIVE THE ENDLESS HIGHWAY</p>
+      </header>
+
+      <div class="home-center">
+        <div class="score-badge">
+          <span class="score-badge-label">BEST</span>
+          <span id="home-high-score">0</span>
+        </div>
+
+        <nav class="home-nav">
+          <button id="btn-start" class="btn-primary pulse-btn">
+            <span class="btn-icon">▶</span> START RACE
+          </button>
+          <button id="btn-how" class="btn-secondary">
+            <span class="btn-icon">?</span> HOW TO PLAY
+          </button>
+        </nav>
+
+        <button id="btn-sound" class="btn-sound" aria-label="Toggle Sound">
+          <span id="sound-icon">🔊</span>
+        </button>
+      </div>
+
+      <footer class="home-footer">
+        Built with <span class="footer-heart">♥</span> using HTML, CSS &amp;
+        JavaScript
+      </footer>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+       HOW TO PLAY MODAL
+  ═══════════════════════════════════════════ -->
+    <div
+      id="modal-how"
+      class="modal-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="How to Play">
+      <div class="modal-box">
+        <button id="btn-close-how" class="modal-close" aria-label="Close">
+          ✕
+        </button>
+        <h2 class="modal-title">HOW TO PLAY</h2>
+
+        <div class="modal-grid">
+          <div class="modal-section">
+            <h3>🎮 Desktop Controls</h3>
+            <div class="controls-list">
+              <div class="ctrl"><kbd>←</kbd><span>Move Left</span></div>
+              <div class="ctrl"><kbd>→</kbd><span>Move Right</span></div>
+              <div class="ctrl"><kbd>P</kbd><span>Pause Game</span></div>
+            </div>
+          </div>
+          <div class="modal-section">
+            <h3>📱 Mobile Controls</h3>
+            <div class="controls-list">
+              <div class="ctrl">
+                <span class="touch-btn">◀</span><span>Move Left</span>
+              </div>
+              <div class="ctrl">
+                <span class="touch-btn">▶</span><span>Move Right</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-section">
+            <h3>🎯 Objective</h3>
+            <ul class="modal-list">
+              <li>Avoid enemy vehicles</li>
+              <li>Collect fuel canisters to keep driving</li>
+              <li>Grab coins for bonus score</li>
+              <li>Survive as long as possible</li>
+            </ul>
+          </div>
+          <div class="modal-section">
+            <h3>📊 Scoring</h3>
+            <ul class="modal-list">
+              <li>+1 point per frame survived</li>
+              <li>+50 points per coin collected</li>
+              <li>High score saved automatically</li>
+            </ul>
+          </div>
+          <div class="modal-section">
+            <h3>❤️ Lives</h3>
+            <p class="modal-text">
+              Start with 3 lives. Each crash removes one. Zero lives = Game
+              Over.
+            </p>
+          </div>
+          <div class="modal-section">
+            <h3>⛽ Fuel</h3>
+            <p class="modal-text">
+              Fuel drains constantly. Collect yellow fuel canisters. Empty tank
+              = Game Over.
+            </p>
+          </div>
+          <div class="modal-section full-width">
+            <h3>⚡ Difficulty</h3>
+            <p class="modal-text">
+              Every 300 points the road gets faster, enemies multiply, and the
+              challenge increases. Stay sharp!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+       GAME SCREEN
+  ═══════════════════════════════════════════ -->
+    <div id="screen-game" class="screen hidden">
+      <!-- HUD -->
+      <div id="hud">
+        <div class="hud-left">
+          <div class="hud-item">
+            <span class="hud-label">SCORE</span>
+            <span id="hud-score" class="hud-value">0</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">BEST</span>
+            <span id="hud-highscore" class="hud-value">0</span>
+          </div>
+        </div>
+        <div class="hud-center">
+          <div id="hud-lives" class="hud-lives">❤️❤️❤️</div>
+          <div class="fuel-bar-wrap">
+            <span class="hud-label">FUEL</span>
+            <div class="fuel-bar-bg">
+              <div id="fuel-bar" class="fuel-bar-fill"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hud-right">
+          <div class="hud-item">
+            <span class="hud-label">COINS</span>
+            <span id="hud-coins" class="hud-value">🪙 0</span>
+          </div>
+          <button id="btn-pause" class="btn-hud" aria-label="Pause">⏸</button>
+          <button id="btn-sound-game" class="btn-hud" aria-label="Sound">
+            🔊
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas -->
+      <canvas id="game-canvas"></canvas>
+
+      <!-- Mobile controls -->
+      <div id="mobile-controls">
+        <button id="btn-left" class="mobile-btn" aria-label="Move Left">
+          ◀
+        </button>
+        <button id="btn-right" class="mobile-btn" aria-label="Move Right">
+          ▶
+        </button>
+      </div>
+
+      <!-- Pause Overlay -->
+      <div id="overlay-pause" class="game-overlay hidden">
+        <div class="overlay-box">
+          <h2 class="overlay-title">PAUSED</h2>
+          <button id="btn-resume" class="btn-primary">▶ RESUME</button>
+          <button id="btn-restart-pause" class="btn-secondary">
+            ↺ RESTART
+          </button>
+          <button id="btn-home-pause" class="btn-ghost">⌂ HOME</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+       GAME OVER SCREEN
+  ═══════════════════════════════════════════ -->
+    <div id="screen-gameover" class="screen hidden">
+      <div class="gameover-content">
+        <div class="gameover-logo">GAME OVER</div>
+        <div class="gameover-stats">
+          <div class="stat-card">
+            <span class="stat-label">SCORE</span>
+            <span id="go-score" class="stat-value">0</span>
+          </div>
+          <div class="stat-card highlight">
+            <span class="stat-label">BEST</span>
+            <span id="go-high" class="stat-value">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">COINS</span>
+            <span id="go-coins" class="stat-value">0</span>
+          </div>
+        </div>
+        <div id="new-record-badge" class="new-record hidden">
+          🏆 NEW RECORD!
+        </div>
+        <div class="gameover-buttons">
+          <button id="btn-play-again" class="btn-primary">↺ PLAY AGAIN</button>
+          <button id="btn-go-home" class="btn-secondary">⌂ HOME</button>
+        </div>
+      </div>
+      <div class="gameover-particles" id="go-particles"></div>
+    </div>
+
+    <!-- Scripts (order matters) -->
+    <script src="audioManager.js"></script>
+    <script src="assets.js"></script>
+    <script src="game.js"></script>
+    <script src="ui.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
