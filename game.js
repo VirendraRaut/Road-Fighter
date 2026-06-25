@@ -42,11 +42,11 @@ const Game = (() => {
 
   // ── Road scroll ─────────────────────────
   let roadY = 0;
-  let roadSpeed = 4; // base px/frame (pre-delta-scaled)
+  let roadSpeed = 3.5; // base px/frame (pre-delta-scaled)
 
   // ── Player ──────────────────────────────
-  const PLAYER_W = 40;
-  const PLAYER_H = 72;
+  let PLAYER_W = 40;
+  let PLAYER_H = 72;
   let playerX, playerY;
   let playerVX = 0; // current horizontal velocity
   let playerLane = 1; // 0 left, 1 mid, 2 right
@@ -73,14 +73,106 @@ const Game = (() => {
   let invincFrames = 0; // brief invincibility post-crash
 
   // ── Constants ───────────────────────────
-  const FUEL_DRAIN_RATE = 0.012; // per frame
+  const FUEL_DRAIN_RATE = 0.008; // per frame (slower drain)
   const PLAYER_SPEED = 5.5;
   const PLAYER_SMOOTH = 0.22;
-  const ENEMY_W = 40;
-  const ENEMY_H = 70;
-  const COIN_R = 12;
-  const FUEL_W = 24;
-  const FUEL_H = 36;
+  let ENEMY_W = 40;
+  let ENEMY_H = 70;
+  let COIN_R = 12;
+  let FUEL_W = 24;
+  let FUEL_H = 36;
+
+  // ── Difficulty progression ──────────────
+  const DIFFICULTY = {
+    // Score thresholds for each level
+    levels: [
+      { score: 0, speed: 1.0, spawnRate: 1.0, fuelDrain: 1.0, enemySpeed: 1.0 },
+      {
+        score: 100,
+        speed: 1.08,
+        spawnRate: 1.0,
+        fuelDrain: 1.0,
+        enemySpeed: 1.05,
+      },
+      {
+        score: 250,
+        speed: 1.15,
+        spawnRate: 0.95,
+        fuelDrain: 1.05,
+        enemySpeed: 1.1,
+      },
+      {
+        score: 400,
+        speed: 1.2,
+        spawnRate: 0.92,
+        fuelDrain: 1.08,
+        enemySpeed: 1.15,
+      },
+      {
+        score: 600,
+        speed: 1.28,
+        spawnRate: 0.88,
+        fuelDrain: 1.12,
+        enemySpeed: 1.2,
+      },
+      {
+        score: 800,
+        speed: 1.35,
+        spawnRate: 0.85,
+        fuelDrain: 1.15,
+        enemySpeed: 1.25,
+      },
+      {
+        score: 1000,
+        speed: 1.4,
+        spawnRate: 0.82,
+        fuelDrain: 1.18,
+        enemySpeed: 1.3,
+      },
+      {
+        score: 1300,
+        speed: 1.48,
+        spawnRate: 0.78,
+        fuelDrain: 1.22,
+        enemySpeed: 1.35,
+      },
+      {
+        score: 1600,
+        speed: 1.55,
+        spawnRate: 0.75,
+        fuelDrain: 1.25,
+        enemySpeed: 1.4,
+      },
+      {
+        score: 2000,
+        speed: 1.6,
+        spawnRate: 0.72,
+        fuelDrain: 1.3,
+        enemySpeed: 1.45,
+      },
+      {
+        score: 2500,
+        speed: 1.68,
+        spawnRate: 0.68,
+        fuelDrain: 1.35,
+        enemySpeed: 1.5,
+      },
+      {
+        score: 3000,
+        speed: 1.75,
+        spawnRate: 0.65,
+        fuelDrain: 1.4,
+        enemySpeed: 1.55,
+      },
+    ],
+    getLevel: function (score) {
+      let level = this.levels[0];
+      for (const l of this.levels) {
+        if (score >= l.score) level = l;
+      }
+      return level;
+    },
+  };
 
   // ── Callbacks to UI ─────────────────────
   let _onScoreUpdate = null;
@@ -115,16 +207,42 @@ const Game = (() => {
   // ════════════════════════════════════════
   function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
-    W = canvas.width = rect.width || window.innerWidth;
-    H = canvas.height = rect.height || window.innerHeight - 56;
+    const parent = canvas.parentElement;
+
+    const availableH = parent ? parent.clientHeight : window.innerHeight;
+    const availableW = parent ? parent.clientWidth : window.innerWidth;
+
+    W = canvas.width = availableW || window.innerWidth;
+    H = canvas.height = availableH || window.innerHeight - 56;
 
     // Road occupies a centred column — narrower on wide screens
-    roadW = Math.min(W, Math.round(H * 0.55));
-    roadW = Math.max(roadW, 220);
+    const ratio = Math.min(1, Math.max(0.5, 1 - (W - 1024) / 2000));
+    roadW = Math.min(W, Math.round(H * (0.4 + ratio * 0.35)));
+    roadW = Math.max(roadW, Math.min(220, W * 0.6));
+    roadW = Math.min(roadW, W * 0.85);
     roadX = Math.round((W - roadW) / 2);
+
+    recalcSizes();
 
     // Reposition player if game is running
     if (running) snapPlayerToLane(playerLane);
+  }
+
+  // ── Responsive sizing ──────────────────
+  function recalcSizes() {
+    const baseSize = Math.min(H * 0.12, 80);
+    PLAYER_W = Math.max(30, Math.min(50, baseSize * 0.55));
+    PLAYER_H = Math.max(50, Math.min(90, baseSize));
+    ENEMY_W = PLAYER_W * 0.9;
+    ENEMY_H = PLAYER_H * 0.95;
+    COIN_R = Math.max(8, PLAYER_W * 0.3);
+    FUEL_W = Math.max(16, PLAYER_W * 0.6);
+    FUEL_H = Math.max(24, PLAYER_H * 0.5);
+
+    if (running) {
+      playerY = H - PLAYER_H - 30;
+      snapPlayerToLane(playerLane);
+    }
   }
 
   // ════════════════════════════════════════
@@ -138,7 +256,7 @@ const Game = (() => {
     lives = 3;
     speedMult = 1;
     roadY = 0;
-    roadSpeed = 4;
+    roadSpeed = 3.5;
     frameCount = 0;
     shakeFrames = 0;
     flashAlpha = 0;
@@ -220,15 +338,12 @@ const Game = (() => {
   // UPDATE
   // ════════════════════════════════════════
   function update(dt) {
-    // ── Difficulty ramp ──────────────────
-    difficultyTimer += dt;
-    if (difficultyTimer > 300) {
-      // every ~5 seconds at 60fps
-      difficultyTimer = 0;
-      const milestone = Math.floor(score / 300);
-      speedMult = 1 + milestone * 0.18;
-      roadSpeed = 4 + milestone * 1.2;
-    }
+    // ── Get current difficulty level ──────
+    const level = DIFFICULTY.getLevel(Math.floor(score));
+    speedMult = level.speed;
+    const spawnRate = level.spawnRate;
+    const enemySpeedMult = level.enemySpeed;
+    const fuelDrainMult = level.fuelDrain;
 
     const effSpeed = roadSpeed * speedMult * dt;
 
@@ -236,11 +351,11 @@ const Game = (() => {
     roadY = (roadY + effSpeed) % H;
 
     // ── Score ────────────────────────────
-    score += dt * speedMult;
+    score += 0.8 * dt * speedMult; // Slower score gain
     if (score > highScore) highScore = Math.floor(score);
 
     // ── Fuel drain ───────────────────────
-    fuel -= FUEL_DRAIN_RATE * dt * speedMult;
+    fuel -= FUEL_DRAIN_RATE * dt * fuelDrainMult;
     fuel = Math.max(0, fuel);
 
     if (fuel <= 0) {
@@ -252,19 +367,18 @@ const Game = (() => {
     updatePlayer(dt);
 
     // ── Spawn entities ────────────────────
-    spawnEnemies(dt);
+    spawnEnemies(dt, spawnRate, enemySpeedMult);
     spawnPickups(dt);
 
     // ── Move enemies ──────────────────────
     enemies.forEach((e) => {
-      e.y += e.speed * speedMult * dt;
+      e.y += e.speed * enemySpeedMult * dt;
     });
     enemies = enemies.filter((e) => e.y < H + 100);
 
     // ── Move pickups ──────────────────────
     pickups.forEach((p) => {
       if (!p.collected) p.y += effSpeed * 0.7;
-      // Coin rotation animation
       if (p.type === "coin") p.anim = (p.anim + 3 * dt) % 360;
     });
     pickups = pickups.filter(
@@ -282,7 +396,7 @@ const Game = (() => {
     particles.forEach((p) => {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      p.vy += 0.2 * dt; // gravity
+      p.vy += 0.2 * dt;
       p.life -= dt;
       p.alpha = Math.max(0, p.life / p.maxLife);
     });
@@ -310,12 +424,9 @@ const Game = (() => {
     if (keys.left) targetVX = -PLAYER_SPEED;
     if (keys.right) targetVX = PLAYER_SPEED;
 
-    // Smooth acceleration
     playerVX += (targetVX - playerVX) * PLAYER_SMOOTH * dt * 3;
-
     playerX += playerVX * dt;
 
-    // Road boundary clamp (with margin for the car width)
     const margin = 8;
     const minX = roadX + margin;
     const maxX = roadX + roadW - PLAYER_W - margin;
@@ -332,8 +443,9 @@ const Game = (() => {
   }
 
   // ── Spawn enemies ───────────────────────
-  function spawnEnemies(dt) {
-    const interval = Math.max(40, 90 - speedMult * 12); // faster spawn over time
+  function spawnEnemies(dt, spawnRate, enemySpeedMult) {
+    const baseInterval = 85;
+    const interval = Math.max(35, baseInterval * spawnRate);
     enemySpawnTimer += dt;
     if (enemySpawnTimer < interval) return;
     enemySpawnTimer = 0;
@@ -341,7 +453,7 @@ const Game = (() => {
     const lane = Math.floor(Math.random() * LANE_COUNT);
     const laneW = roadW / LANE_COUNT;
     const ex = roadX + laneW * lane + (laneW - ENEMY_W) / 2;
-    const baseSpeed = 2.5 + Math.random() * 2;
+    const baseSpeed = 1.8 + Math.random() * 1.5;
 
     enemies.push({
       x: ex,
@@ -350,18 +462,17 @@ const Game = (() => {
       h: ENEMY_H,
       speed: baseSpeed,
       lane,
-      // Slight color tint variation per enemy
-      hue: Math.floor(Math.random() * 40 - 20), // -20 to +20 degrees
+      hue: Math.floor(Math.random() * 40 - 20),
     });
   }
 
-  // ── Spawn pickups (coins & fuel) ────────
+  // ── Spawn pickups ────────────────────────
   function spawnPickups(dt) {
     // Coins
     coinSpawnTimer += dt;
-    if (coinSpawnTimer > 120) {
+    if (coinSpawnTimer > 130) {
       coinSpawnTimer = 0;
-      if (Math.random() < 0.65) {
+      if (Math.random() < 0.55) {
         const lane = Math.floor(Math.random() * LANE_COUNT);
         const laneW = roadW / LANE_COUNT;
         pickups.push({
@@ -379,10 +490,10 @@ const Game = (() => {
 
     // Fuel canisters
     fuelSpawnTimer += dt;
-    const fuelInterval = fuel < 40 ? 80 : 200; // spawn faster when low
+    const fuelInterval = fuel < 40 ? 90 : 220;
     if (fuelSpawnTimer > fuelInterval) {
       fuelSpawnTimer = 0;
-      if (Math.random() < (fuel < 35 ? 0.8 : 0.35)) {
+      if (Math.random() < (fuel < 35 ? 0.75 : 0.3)) {
         const lane = Math.floor(Math.random() * LANE_COUNT);
         const laneW = roadW / LANE_COUNT;
         pickups.push({
@@ -399,14 +510,13 @@ const Game = (() => {
     }
   }
 
-  // ── Collision detection (AABB) ──────────
+  // ── Collision detection ──────────────────
   function checkCollisions() {
     const px = playerX + 4;
     const py = playerY + 8;
     const pw = PLAYER_W - 8;
     const ph = PLAYER_H - 8;
 
-    // Vs enemies
     for (const e of enemies) {
       if (aabbOverlap(px, py, pw, ph, e.x + 4, e.y + 4, e.w - 8, e.h - 8)) {
         onCrash(e);
@@ -414,7 +524,6 @@ const Game = (() => {
       }
     }
 
-    // Vs pickups
     for (const p of pickups) {
       if (!p.collected && aabbOverlap(px, py, pw, ph, p.x, p.y, p.w, p.h)) {
         collectPickup(p);
@@ -429,22 +538,18 @@ const Game = (() => {
   // ── Crash handler ───────────────────────
   function onCrash(enemy) {
     lives--;
-    invincFrames = 120; // ~2 seconds invincibility
+    invincFrames = 120;
     shakeFrames = 25;
     flashAlpha = 0.75;
 
-    // Scatter crash particles at impact point
     spawnCrashParticles(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2);
-
-    // Remove the hit enemy
     enemies = enemies.filter((e) => e !== enemy);
 
     AudioManager.playSfx("crash");
 
-    // Trigger shake via class on the game screen
     const gs = document.getElementById("screen-game");
     gs.classList.remove("screen-shake");
-    void gs.offsetWidth; // force reflow
+    void gs.offsetWidth;
     gs.classList.add("screen-shake");
     setTimeout(() => gs.classList.remove("screen-shake"), 500);
 
@@ -464,12 +569,12 @@ const Game = (() => {
 
     if (pickup.type === "coin") {
       coins++;
-      score += 50;
+      score += 40; // Slightly less per coin
       AudioManager.playSfx("coin");
-      addPopup("+50", pickup.x + COIN_R, pickup.y, "#ffd93d");
+      addPopup("+40", pickup.x + COIN_R, pickup.y, "#ffd93d");
       spawnCoinParticles(pickup.x + COIN_R, pickup.y + COIN_R);
     } else if (pickup.type === "fuel") {
-      fuel = Math.min(100, fuel + 35);
+      fuel = Math.min(100, fuel + 30);
       addPopup("⛽ +FUEL", pickup.x + FUEL_W / 2, pickup.y, "#39d37a");
     }
   }
@@ -480,7 +585,6 @@ const Game = (() => {
     gameOverFlag = true;
     running = false;
 
-    // Save high score
     localStorage.setItem("rf_highscore", Math.floor(highScore));
 
     AudioManager.stopBg();
@@ -491,7 +595,6 @@ const Game = (() => {
       rafId = null;
     }
 
-    // Notify UI after brief delay for drama
     setTimeout(() => {
       if (_onGameOver)
         _onGameOver({
@@ -511,32 +614,17 @@ const Game = (() => {
   function render() {
     ctx.clearRect(0, 0, W, H);
 
-    // Off-road areas (dark grass / kerb)
     ctx.fillStyle = "#0e1218";
     ctx.fillRect(0, 0, W, H);
 
-    // ── Road ──────────────────────────────
     drawRoad();
-
-    // ── Pickup items ──────────────────────
     pickups.forEach(drawPickup);
-
-    // ── Enemy cars ────────────────────────
     enemies.forEach(drawEnemy);
-
-    // ── Player car ────────────────────────
     drawPlayer();
-
-    // ── Particles ─────────────────────────
     drawParticles();
-
-    // ── Score popups ──────────────────────
     drawPopups();
-
-    // ── Speed lines (sides) ───────────────
     drawSpeedLines();
 
-    // ── Flash effect ──────────────────────
     if (flashAlpha > 0) {
       ctx.fillStyle = `rgba(255, 80, 80, ${flashAlpha})`;
       ctx.fillRect(0, 0, W, H);
@@ -548,25 +636,19 @@ const Game = (() => {
     const img = Assets.get("road");
 
     if (img) {
-      // Tile road.png vertically in a scrolling loop
       const imgH = img.height || H;
       const scale = roadW / (img.width || roadW);
       const tileH = imgH * scale;
 
       let y = (roadY % tileH) - tileH;
       while (y < H) {
-        if (img.tagName === "CANVAS") {
-          ctx.drawImage(img, roadX, y, roadW, tileH);
-        } else {
-          ctx.drawImage(img, roadX, y, roadW, tileH);
-        }
+        ctx.drawImage(img, roadX, y, roadW, tileH);
         y += tileH;
       }
     } else {
       drawFallbackRoad();
     }
 
-    // Road edge gradient overlays for depth
     const leftGrad = ctx.createLinearGradient(roadX, 0, roadX + 20, 0);
     leftGrad.addColorStop(0, "rgba(0,0,0,0.5)");
     leftGrad.addColorStop(1, "rgba(0,0,0,0)");
@@ -586,16 +668,13 @@ const Game = (() => {
   }
 
   function drawFallbackRoad() {
-    // Asphalt
     ctx.fillStyle = "#1e2228";
     ctx.fillRect(roadX, 0, roadW, H);
 
-    // White edge lines
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(roadX, 0, 5, H);
     ctx.fillRect(roadX + roadW - 5, 0, 5, H);
 
-    // Lane dividers (dashed)
     ctx.strokeStyle = "rgba(255,255,255,0.25)";
     ctx.lineWidth = 3;
     ctx.setLineDash([28, 28]);
@@ -617,7 +696,6 @@ const Game = (() => {
     if (img) {
       ctx.save();
       ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
-      // Rotate 180° because enemy car image faces "down" (toward player)
       ctx.rotate(Math.PI);
       ctx.drawImage(img, -e.w / 2, -e.h / 2, e.w, e.h);
       ctx.restore();
@@ -630,7 +708,6 @@ const Game = (() => {
   function drawPlayer() {
     const img = Assets.get("playerCar");
 
-    // Blink during invincibility
     if (invincFrames > 0 && Math.floor(invincFrames / 5) % 2 === 0) return;
 
     ctx.save();
@@ -640,7 +717,6 @@ const Game = (() => {
       drawFallbackCar(playerX, playerY, PLAYER_W, PLAYER_H, "#00aaff");
     }
 
-    // Speed-based tilt on horizontal movement
     if (Math.abs(playerVX) > 1) {
       const tilt = (playerVX / PLAYER_SPEED) * 0.06;
       ctx.globalAlpha = 0.18;
@@ -656,7 +732,6 @@ const Game = (() => {
     }
     ctx.restore();
 
-    // Shadow beneath car
     ctx.save();
     ctx.globalAlpha = 0.25;
     ctx.fillStyle = "#000";
@@ -695,12 +770,18 @@ const Game = (() => {
     });
   }
 
+  function createPlayerPlaceholder() {
+    const c = document.createElement("canvas");
+    c.width = PLAYER_W;
+    c.height = PLAYER_H;
+    return c;
+  }
+
   // ── Pickup rendering ────────────────────
   function drawPickup(p) {
     if (p.collected) {
-      // Collect burst animation — scale up and fade
       ctx.save();
-      const t = p.anim / 30; // 0–1
+      const t = p.anim / 30;
       ctx.globalAlpha = Math.max(0, 1 - t * 2.5);
       ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
       ctx.scale(1 + t * 1.5, 1 + t * 1.5);
@@ -724,27 +805,23 @@ const Game = (() => {
       ctx.translate(cx, cy);
       ctx.scale(squeeze, 1);
 
-      // Coin body
       ctx.fillStyle = "#ffd93d";
       ctx.beginPath();
       ctx.arc(0, 0, COIN_R, 0, Math.PI * 2);
       ctx.fill();
 
-      // Inner ring
       ctx.strokeStyle = "#ffb800";
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(0, 0, COIN_R - 3, 0, Math.PI * 2);
       ctx.stroke();
 
-      // $ symbol
       ctx.fillStyle = "#b8860b";
       ctx.font = `bold ${COIN_R}px monospace`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("$", 0, 0);
 
-      // Shine
       ctx.globalAlpha = 0.4;
       ctx.fillStyle = "#fff";
       ctx.beginPath();
@@ -753,7 +830,6 @@ const Game = (() => {
 
       ctx.restore();
 
-      // Glow
       ctx.save();
       ctx.globalAlpha = 0.15;
       ctx.fillStyle = "#ffd93d";
@@ -764,7 +840,6 @@ const Game = (() => {
     } else if (p.type === "fuel") {
       const fx = x,
         fy = y;
-      // Canister body
       ctx.fillStyle = "#39d37a";
       if (ctx.roundRect) {
         ctx.beginPath();
@@ -773,19 +848,15 @@ const Game = (() => {
       } else {
         ctx.fillRect(fx, fy + 8, FUEL_W, FUEL_H - 8);
       }
-      // Cap
       ctx.fillStyle = "#2aaa62";
       ctx.fillRect(fx + 6, fy + 4, FUEL_W - 12, 8);
-      // Spout
       ctx.fillStyle = "#1a7a44";
       ctx.fillRect(fx + FUEL_W - 6, fy, 6, 10);
-      // Label
       ctx.fillStyle = "#fff";
       ctx.font = `bold 10px monospace`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("⛽", fx + FUEL_W / 2, fy + FUEL_H / 2 + 6);
-      // Glow
       ctx.save();
       ctx.globalAlpha = 0.1;
       ctx.fillStyle = "#39d37a";
@@ -866,29 +937,27 @@ const Game = (() => {
     });
   }
 
-  // ── Speed lines (roadside atmosphere) ───
+  // ── Speed lines ──────────────────────────
   function drawSpeedLines() {
-    if (speedMult < 1.2) return;
-    const intensity = Math.min(1, (speedMult - 1.2) / 2);
-    const lineCount = Math.floor(6 * intensity);
+    if (speedMult < 1.15) return;
+    const intensity = Math.min(1, (speedMult - 1.15) / 1.5);
+    const lineCount = Math.floor(4 * intensity);
     const sideW = (W - roadW) / 2;
     if (sideW < 10) return;
 
     ctx.save();
-    ctx.globalAlpha = 0.25 * intensity;
+    ctx.globalAlpha = 0.2 * intensity;
     ctx.strokeStyle = "#00e6ff";
     ctx.lineWidth = 1.5;
 
     for (let i = 0; i < lineCount; i++) {
       const lx = Math.random() * sideW;
       const ly = Math.random() * H;
-      const len = 20 + Math.random() * 50;
-      // Left side
+      const len = 20 + Math.random() * 40;
       ctx.beginPath();
       ctx.moveTo(lx, ly);
       ctx.lineTo(lx, ly + len);
       ctx.stroke();
-      // Right side
       const rx = roadX + roadW + Math.random() * sideW;
       ctx.beginPath();
       ctx.moveTo(rx, ly);
@@ -992,15 +1061,3 @@ const Game = (() => {
     loadHighScore,
   };
 })();
-// ── Polyfill roundRect for older browsers ──
-if (!CanvasRenderingContext2D.prototype.roundRect) {
-  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, radii) {
-    const r = typeof radii === "number" ? radii : radii || 0;
-    this.moveTo(x + r, y);
-    this.arcTo(x + w, y, x + w, y + h, r);
-    this.arcTo(x + w, y + h, x, y + h, r);
-    this.arcTo(x, y + h, x, y, r);
-    this.arcTo(x, y, x + w, y, r);
-    return this;
-  };
-}
