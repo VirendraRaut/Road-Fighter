@@ -27,6 +27,10 @@
   --radius-sm: 6px;
   --glow-cyan: 0 0 12px var(--c-cyan), 0 0 30px rgba(0, 230, 255, 0.25);
   --glow-orange: 0 0 12px var(--c-orange), 0 0 30px rgba(255, 107, 26, 0.25);
+
+  /* Responsive sizing */
+  --hud-height: clamp(48px, 6vh, 64px);
+  --mobile-control-height: clamp(56px, 8vh, 80px);
 }
 
 /* ── Reset ────────────────────────────────── */
@@ -113,7 +117,7 @@ body {
 .home-header {
   position: relative;
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: clamp(1rem, 3vh, 2.5rem);
 }
 .logo-wrap {
   position: relative;
@@ -129,12 +133,12 @@ body {
   text-transform: uppercase;
 }
 .logo-top {
-  font-size: clamp(2.8rem, 9vw, 6rem);
+  font-size: clamp(2.4rem, 6vw, 5.5rem);
   color: var(--c-white);
   text-shadow: var(--glow-cyan);
 }
 .logo-bottom {
-  font-size: clamp(3.6rem, 12vw, 8rem);
+  font-size: clamp(3rem, 8vw, 7.5rem);
   color: var(--c-cyan);
   text-shadow: var(--glow-cyan);
   margin-top: -0.08em;
@@ -161,11 +165,12 @@ body {
 }
 .logo-tagline {
   font-family: var(--font-display);
-  font-size: clamp(0.55rem, 2vw, 0.85rem);
+  font-size: clamp(0.5rem, 1.2vw, 0.85rem);
   letter-spacing: 0.3em;
   color: var(--c-muted);
   margin-top: 0.5rem;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* Home center layout */
@@ -174,7 +179,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.4rem;
+  gap: clamp(1rem, 3vh, 2rem);
+  width: 90%;
+  max-width: 400px;
 }
 
 /* High score badge */
@@ -196,7 +203,7 @@ body {
 }
 #home-high-score {
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 2vw, 1.4rem);
   font-weight: 700;
   color: var(--c-gold);
   text-shadow: 0 0 8px rgba(255, 217, 61, 0.5);
@@ -208,7 +215,6 @@ body {
   flex-direction: column;
   gap: 0.75rem;
   width: 100%;
-  max-width: 280px;
 }
 .btn-primary {
   display: flex;
@@ -216,12 +222,12 @@ body {
   justify-content: center;
   gap: 0.6rem;
   width: 100%;
-  padding: 0.9rem 2rem;
+  padding: clamp(0.7rem, 1.5vh, 1rem) clamp(1.5rem, 3vw, 2.5rem);
   background: linear-gradient(135deg, var(--c-cyan) 0%, #0099cc 100%);
   color: #07090f;
   font-weight: 800;
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: clamp(0.85rem, 1.2vw, 1.1rem);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   border: none;
@@ -246,12 +252,12 @@ body {
   justify-content: center;
   gap: 0.6rem;
   width: 100%;
-  padding: 0.85rem 2rem;
+  padding: clamp(0.65rem, 1.4vh, 0.9rem) clamp(1.5rem, 3vw, 2.5rem);
   background: transparent;
   color: var(--c-white);
   font-weight: 700;
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: clamp(0.8rem, 1.1vw, 1rem);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   border: 1px solid var(--c-border);
@@ -316,9 +322,9 @@ body {
   background: var(--c-panel);
   border: 1px solid var(--c-border);
   color: var(--c-white);
-  font-size: 1.3rem;
-  width: 48px;
-  height: 48px;
+  font-size: clamp(1.1rem, 1.5vw, 1.4rem);
+  width: clamp(42px, 5vh, 56px);
+  height: clamp(42px, 5vh, 56px);
   border-radius: 50%;
   cursor: pointer;
   backdrop-filter: blur(8px);
@@ -335,9 +341,10 @@ body {
 .home-footer {
   position: absolute;
   bottom: 1.2rem;
-  font-size: 0.72rem;
+  font-size: clamp(0.6rem, 0.8vw, 0.75rem);
   color: var(--c-muted);
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 .footer-heart {
   color: var(--c-red);
@@ -367,8 +374,8 @@ body {
   background: rgba(13, 20, 35, 0.95);
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
-  padding: 2rem;
-  max-width: 640px;
+  padding: clamp(1.5rem, 3vh, 2.5rem);
+  max-width: min(640px, 92vw);
   width: 100%;
   max-height: 88vh;
   overflow-y: auto;
@@ -381,9 +388,9 @@ body {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--c-border);
   color: var(--c-white);
-  font-size: 1rem;
-  width: 36px;
-  height: 36px;
+  font-size: clamp(0.9rem, 1.2vw, 1.1rem);
+  width: clamp(32px, 4vh, 40px);
+  height: clamp(32px, 4vh, 40px);
   border-radius: 50%;
   cursor: pointer;
   transition: background 0.2s;
@@ -393,7 +400,7 @@ body {
 }
 .modal-title {
   font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
   letter-spacing: 0.15em;
   color: var(--c-cyan);
   text-align: center;
@@ -409,14 +416,14 @@ body {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-sm);
-  padding: 1rem;
+  padding: clamp(0.8rem, 1.5vh, 1.2rem);
 }
 .modal-section.full-width {
   grid-column: 1 / -1;
 }
 .modal-section h3 {
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: clamp(0.65rem, 0.9vw, 0.8rem);
   letter-spacing: 0.15em;
   color: var(--c-orange);
   text-transform: uppercase;
@@ -431,7 +438,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  font-size: 0.85rem;
+  font-size: clamp(0.75rem, 1vw, 0.9rem);
   color: var(--c-white);
 }
 kbd {
@@ -458,7 +465,7 @@ kbd {
   gap: 0.4rem;
 }
 .modal-list li {
-  font-size: 0.83rem;
+  font-size: clamp(0.75rem, 1vw, 0.88rem);
   color: var(--c-white);
   padding-left: 1rem;
   position: relative;
@@ -470,7 +477,7 @@ kbd {
   color: var(--c-cyan);
 }
 .modal-text {
-  font-size: 0.83rem;
+  font-size: clamp(0.75rem, 1vw, 0.88rem);
   color: var(--c-white);
   line-height: 1.55;
 }
@@ -488,13 +495,13 @@ kbd {
 /* HUD */
 #hud {
   width: 100%;
-  height: 56px;
+  height: var(--hud-height);
   background: rgba(7, 9, 15, 0.92);
   border-bottom: 1px solid var(--c-border);
   display: flex;
   align-items: center;
-  padding: 0 1rem;
-  gap: 1rem;
+  padding: 0 clamp(0.5rem, 1.5vw, 1.5rem);
+  gap: clamp(0.4rem, 1.5vw, 1.5rem);
   flex-shrink: 0;
   z-index: 10;
   backdrop-filter: blur(4px);
@@ -503,19 +510,23 @@ kbd {
 .hud-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  min-width: 140px;
+  gap: clamp(0.3rem, 1vw, 1.2rem);
+  flex: 1;
+}
+.hud-left {
+  justify-content: flex-start;
 }
 .hud-right {
   justify-content: flex-end;
 }
 .hud-center {
-  flex: 1;
+  flex: 2;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.1rem;
+  min-width: 0;
 }
 .hud-item {
   display: flex;
@@ -525,20 +536,23 @@ kbd {
 }
 .hud-label {
   font-family: var(--font-display);
-  font-size: 0.5rem;
+  font-size: clamp(0.4rem, 0.6vw, 0.55rem);
   letter-spacing: 0.15em;
   color: var(--c-muted);
   text-transform: uppercase;
+  white-space: nowrap;
 }
 .hud-value {
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: clamp(0.75rem, 1.2vw, 1.1rem);
   font-weight: 700;
   color: var(--c-white);
+  white-space: nowrap;
 }
 .hud-lives {
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
+  font-size: clamp(0.7rem, 1vw, 1rem);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 /* Fuel bar */
@@ -546,14 +560,20 @@ kbd {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  width: 100%;
+  max-width: 200px;
+}
+.fuel-bar-wrap .hud-label {
+  font-size: clamp(0.4rem, 0.5vw, 0.5rem);
 }
 .fuel-bar-bg {
-  width: 80px;
-  height: 8px;
+  flex: 1;
+  height: clamp(6px, 0.8vh, 10px);
   background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 40px;
 }
 .fuel-bar-fill {
   height: 100%;
@@ -582,23 +602,28 @@ kbd {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--c-border);
   color: var(--c-white);
-  font-size: 1rem;
-  width: 34px;
-  height: 34px;
+  font-size: clamp(0.8rem, 1vw, 1.1rem);
+  width: clamp(30px, 3.5vh, 38px);
+  height: clamp(30px, 3.5vh, 38px);
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .btn-hud:hover {
   background: rgba(0, 230, 255, 0.12);
 }
 
-/* Canvas */
+/* Canvas - FULL responsive */
 #game-canvas {
   display: block;
   flex: 1;
   width: 100%;
+  height: 100%;
   image-rendering: pixelated;
+  background: #0a0e14;
 }
 
 /* Mobile controls */
@@ -609,28 +634,29 @@ kbd {
   right: 0;
   display: none;
   justify-content: space-between;
-  padding: 0.75rem 1.5rem;
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  padding: clamp(0.4rem, 1vh, 0.8rem) clamp(0.8rem, 2vw, 2rem);
+  padding-bottom: max(clamp(0.4rem, 1vh, 0.8rem), env(safe-area-inset-bottom));
   background: rgba(7, 9, 15, 0.7);
   border-top: 1px solid var(--c-border);
   backdrop-filter: blur(8px);
   z-index: 20;
-  gap: 1rem;
+  gap: clamp(0.5rem, 2vw, 2rem);
 }
 .mobile-btn {
   flex: 1;
-  height: 64px;
-  max-width: 160px;
+  height: var(--mobile-control-height);
+  max-width: 200px;
   background: rgba(0, 230, 255, 0.08);
   border: 2px solid var(--c-cyan-dim);
   border-radius: var(--radius);
   color: var(--c-cyan);
-  font-size: 1.6rem;
+  font-size: clamp(1.2rem, 3vw, 2rem);
   cursor: pointer;
   transition:
     background 0.1s,
     transform 0.08s;
   touch-action: manipulation;
+  -webkit-touch-callout: none;
 }
 .mobile-btn:active {
   background: rgba(0, 230, 255, 0.2);
@@ -657,17 +683,18 @@ kbd {
   background: var(--c-panel);
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
-  padding: 2.5rem 2rem;
+  padding: clamp(1.5rem, 4vh, 3rem) clamp(1.5rem, 3vw, 3rem);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  min-width: 240px;
+  min-width: clamp(200px, 30vw, 300px);
+  max-width: 90vw;
   box-shadow: 0 0 60px rgba(0, 230, 255, 0.1);
 }
 .overlay-title {
   font-family: var(--font-display);
-  font-size: 1.8rem;
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
   letter-spacing: 0.2em;
   color: var(--c-cyan);
   text-shadow: var(--glow-cyan);
@@ -696,13 +723,15 @@ kbd {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: clamp(1.5rem, 4vh, 3rem);
   text-align: center;
   padding: 1rem;
+  width: 90%;
+  max-width: 500px;
 }
 .gameover-logo {
   font-family: var(--font-display);
-  font-size: clamp(2.5rem, 10vw, 5rem);
+  font-size: clamp(2.2rem, 8vw, 5rem);
   font-weight: 900;
   letter-spacing: 0.1em;
   color: var(--c-red);
@@ -723,20 +752,23 @@ kbd {
 }
 .gameover-stats {
   display: flex;
-  gap: 1rem;
+  gap: clamp(0.5rem, 1.5vw, 1.5rem);
   flex-wrap: wrap;
   justify-content: center;
+  width: 100%;
 }
 .stat-card {
   background: var(--c-panel);
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
-  padding: 1rem 1.5rem;
+  padding: clamp(0.8rem, 1.5vh, 1.5rem) clamp(1rem, 2vw, 2rem);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.3rem;
-  min-width: 110px;
+  flex: 1;
+  min-width: clamp(80px, 15vw, 130px);
+  max-width: 200px;
   backdrop-filter: blur(12px);
 }
 .stat-card.highlight {
@@ -745,14 +777,14 @@ kbd {
 }
 .stat-label {
   font-family: var(--font-display);
-  font-size: 0.6rem;
+  font-size: clamp(0.5rem, 0.7vw, 0.7rem);
   letter-spacing: 0.2em;
   color: var(--c-muted);
   text-transform: uppercase;
 }
 .stat-value {
   font-family: var(--font-display);
-  font-size: 1.8rem;
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
   font-weight: 700;
   color: var(--c-white);
 }
@@ -762,7 +794,7 @@ kbd {
 
 .new-record {
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: clamp(0.9rem, 1.5vw, 1.3rem);
   letter-spacing: 0.1em;
   color: var(--c-gold);
   text-shadow: 0 0 12px rgba(255, 217, 61, 0.6);
@@ -785,7 +817,7 @@ kbd {
   flex-direction: column;
   gap: 0.75rem;
   width: 100%;
-  max-width: 260px;
+  max-width: 280px;
 }
 
 /* Particle canvas for game over */
@@ -799,7 +831,9 @@ kbd {
 /* ═══════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
 ═══════════════════════════════════════════ */
-@media (pointer: coarse), (max-width: 768px) {
+
+/* ── Tablets & Touch Devices ── */
+@media (pointer: coarse), (max-width: 1024px) {
   #mobile-controls {
     display: flex;
   }
@@ -808,42 +842,161 @@ kbd {
   }
 }
 
-@media (max-width: 480px) {
-  #hud {
-    padding: 0 0.5rem;
-    gap: 0.4rem;
+/* ── Large Screens (Desktop) ── */
+@media (min-width: 1025px) {
+  #game-canvas {
+    max-width: 100vw;
+    max-height: calc(100vh - var(--hud-height));
   }
+
   .hud-left,
   .hud-right {
-    min-width: 100px;
+    flex: 0 1 auto;
   }
-  .fuel-bar-bg {
-    width: 60px;
+
+  .hud-center {
+    flex: 1;
   }
+
+  .fuel-bar-wrap {
+    max-width: 250px;
+  }
+}
+
+/* ── Small Tablets ── */
+@media (max-width: 820px) {
   .modal-grid {
     grid-template-columns: 1fr;
   }
   .modal-section.full-width {
     grid-column: 1;
   }
-  .gameover-stats {
-    gap: 0.6rem;
-  }
-  .stat-card {
-    min-width: 90px;
-    padding: 0.75rem 1rem;
-  }
-  .stat-value {
-    font-size: 1.4rem;
+  .hud-value {
+    font-size: clamp(0.7rem, 1.5vw, 0.9rem);
   }
 }
 
+/* ── Mobile Phones ── */
+@media (max-width: 480px) {
+  #hud {
+    padding: 0 0.4rem;
+    gap: 0.2rem;
+    height: clamp(42px, 7vh, 52px);
+  }
+  .hud-left,
+  .hud-right {
+    gap: 0.2rem;
+    min-width: 0;
+  }
+  .fuel-bar-wrap {
+    max-width: 100px;
+  }
+  .fuel-bar-bg {
+    height: 4px;
+    min-width: 30px;
+  }
+  .hud-lives {
+    font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+  }
+  .btn-hud {
+    width: clamp(26px, 4vh, 32px);
+    height: clamp(26px, 4vh, 32px);
+    font-size: clamp(0.7rem, 1.5vw, 0.9rem);
+  }
+  .stat-card {
+    min-width: 70px;
+    padding: 0.6rem 0.8rem;
+  }
+  .stat-value {
+    font-size: clamp(1.2rem, 4vw, 1.6rem);
+  }
+  .mobile-btn {
+    height: clamp(48px, 8vh, 60px);
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    max-width: 120px;
+  }
+  .gameover-stats {
+    gap: 0.4rem;
+  }
+}
+
+/* ── Very Small Phones ── */
 @media (max-width: 360px) {
   .logo-top {
-    font-size: 2.2rem;
+    font-size: 2rem;
   }
   .logo-bottom {
-    font-size: 2.8rem;
+    font-size: 2.5rem;
+  }
+  .home-center {
+    gap: 0.8rem;
+  }
+  .score-badge {
+    padding: 0.3rem 1rem;
+  }
+  #home-high-score {
+    font-size: 0.9rem;
+  }
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.6rem 1rem;
+    font-size: 0.75rem;
+  }
+  .fuel-bar-wrap {
+    max-width: 60px;
+  }
+}
+
+/* ── Landscape Mobile ── */
+@media (max-height: 500px) and (orientation: landscape) {
+  #hud {
+    height: clamp(36px, 8vh, 44px);
+  }
+  .hud-value {
+    font-size: clamp(0.6rem, 1.2vw, 0.8rem);
+  }
+  .hud-label {
+    font-size: clamp(0.3rem, 0.5vw, 0.4rem);
+  }
+  .fuel-bar-bg {
+    height: 4px;
+  }
+  .btn-hud {
+    width: clamp(24px, 3.5vh, 30px);
+    height: clamp(24px, 3.5vh, 30px);
+    font-size: clamp(0.6rem, 1vw, 0.8rem);
+  }
+  .mobile-btn {
+    height: clamp(40px, 10vh, 56px);
+    font-size: clamp(0.9rem, 2vw, 1.3rem);
+    max-width: 100px;
+  }
+  #mobile-controls {
+    padding: 0.2rem 0.8rem;
+    padding-bottom: max(0.2rem, env(safe-area-inset-bottom));
+  }
+  .gameover-logo {
+    font-size: clamp(1.8rem, 6vw, 3rem);
+  }
+  .stat-card {
+    padding: 0.4rem 0.8rem;
+    min-width: 60px;
+  }
+  .stat-value {
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+  }
+}
+
+/* ── 4K Ultra Wide ── */
+@media (min-width: 1920px) {
+  .home-center {
+    max-width: 500px;
+  }
+  .fuel-bar-wrap {
+    max-width: 350px;
+  }
+  .stat-card {
+    min-width: 180px;
   }
 }
 
