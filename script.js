@@ -5,113 +5,202 @@
  */
 
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("🚀 Road Fighter starting...");
+
+  // ── Check if all modules are loaded ──
+  if (typeof AudioManager === "undefined") {
+    console.error("❌ AudioManager not loaded!");
+    alert("Error: AudioManager failed to load. Please refresh the page.");
+    return;
+  }
+  if (typeof Assets === "undefined") {
+    console.error("❌ Assets not loaded!");
+    alert("Error: Assets failed to load. Please refresh the page.");
+    return;
+  }
+  if (typeof UI === "undefined") {
+    console.error("❌ UI not loaded!");
+    alert("Error: UI failed to load. Please refresh the page.");
+    return;
+  }
+  if (typeof Game === "undefined") {
+    console.error("❌ Game not loaded!");
+    alert("Error: Game failed to load. Please refresh the page.");
+    return;
+  }
+
+  console.log("✅ All modules loaded");
+
   // ── Initialise modules ──────────────────
-  AudioManager.init();
-  UI.init();
+  try {
+    AudioManager.init();
+    console.log("✅ AudioManager initialised");
+  } catch (e) {
+    console.error("❌ AudioManager init failed:", e);
+  }
+
+  try {
+    UI.init();
+    console.log("✅ UI initialised");
+  } catch (e) {
+    console.error("❌ UI init failed:", e);
+  }
 
   // ── Load assets ─────────────────────────
+  console.log("📦 Loading assets...");
   Assets.load((images) => {
-    // Assets are ready; initialise the game
-    Game.init({
-      onScore: UI.updateScore,
-      onLives: UI.updateLives,
-      onFuel: UI.updateFuel,
-      onCoins: UI.updateCoins,
-      onGameOver: UI.showGameOver,
-    });
+    console.log("✅ Assets loaded:", Object.keys(images).length, "items");
 
-    // Set high score in UI
-    const high = Game.loadHighScore();
-    UI.updateHomeHighScore(high);
+    try {
+      // Initialise the game
+      Game.init({
+        onScore: UI.updateScore,
+        onLives: UI.updateLives,
+        onFuel: UI.updateFuel,
+        onCoins: UI.updateCoins,
+        onGameOver: UI.showGameOver,
+      });
+      console.log("✅ Game initialised");
 
-    // ── Bind UI events ─────────────────────
-    bindUIEvents();
+      // Set high score in UI
+      const high = Game.loadHighScore();
+      UI.updateHomeHighScore(high);
 
-    // ── Auto-start (optional) ──────────────
-    // Just show the home screen (no auto-start)
-    UI.showHome();
+      // ── Bind UI events ─────────────────────
+      bindUIEvents();
+      console.log("✅ UI events bound");
 
-    console.log("🏁 Road Fighter ready!");
+      // Show home screen
+      UI.showHome();
+      console.log("🏁 Road Fighter ready!");
+
+      // Test sound
+      setTimeout(() => {
+        try {
+          AudioManager.testSound();
+        } catch (e) {
+          // Silently fail
+        }
+      }, 500);
+    } catch (e) {
+      console.error("❌ Game init failed:", e);
+      alert("Error starting game. Check console for details.");
+    }
   });
 });
 
 function bindUIEvents() {
   // Start button
-  document.getElementById("btn-start").addEventListener("click", () => {
-    AudioManager.playSfx("start");
-    Game.start();
-    UI.showGame();
-  });
+  const startBtn = document.getElementById("btn-start");
+  if (startBtn) {
+    startBtn.addEventListener("click", () => {
+      try {
+        AudioManager.playSfx("start");
+        Game.start();
+        UI.showGame();
+      } catch (e) {
+        console.error("Start error:", e);
+      }
+    });
+  }
 
   // How to play button
-  document.getElementById("btn-how").addEventListener("click", () => {
-    UI.showHowTo();
-  });
+  const howBtn = document.getElementById("btn-how");
+  if (howBtn) {
+    howBtn.addEventListener("click", () => {
+      UI.showHowTo();
+    });
+  }
 
   // Close how-to modal
-  document.getElementById("btn-close-how").addEventListener("click", () => {
-    UI.hideHowTo();
-  });
-  document.getElementById("modal-how").addEventListener("click", (e) => {
-    if (e.target === e.currentTarget) UI.hideHowTo();
-  });
+  const closeHowBtn = document.getElementById("btn-close-how");
+  if (closeHowBtn) {
+    closeHowBtn.addEventListener("click", () => {
+      UI.hideHowTo();
+    });
+  }
+
+  const modalHow = document.getElementById("modal-how");
+  if (modalHow) {
+    modalHow.addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) UI.hideHowTo();
+    });
+  }
 
   // Sound toggle (home)
-  document.getElementById("btn-sound").addEventListener("click", () => {
-    const muted = AudioManager.toggleMute();
-    UI.updateSoundIcon(muted);
-  });
+  const soundBtn = document.getElementById("btn-sound");
+  if (soundBtn) {
+    soundBtn.addEventListener("click", () => {
+      const muted = AudioManager.toggleMute();
+      UI.updateSoundIcon(muted);
+    });
+  }
 
   // Sound toggle (game)
-  document.getElementById("btn-sound-game").addEventListener("click", () => {
-    const muted = AudioManager.toggleMute();
-    UI.updateSoundIcon(muted);
-  });
+  const soundGameBtn = document.getElementById("btn-sound-game");
+  if (soundGameBtn) {
+    soundGameBtn.addEventListener("click", () => {
+      const muted = AudioManager.toggleMute();
+      UI.updateSoundIcon(muted);
+    });
+  }
 
   // Pause button
-  document.getElementById("btn-pause").addEventListener("click", () => {
-    const paused = Game.pause();
-    document
-      .getElementById("overlay-pause")
-      .classList.toggle("hidden", !paused);
-    if (paused) {
-      AudioManager.stopBg();
-    } else {
-      AudioManager.playBg("race");
-    }
-  });
+  const pauseBtn = document.getElementById("btn-pause");
+  if (pauseBtn) {
+    pauseBtn.addEventListener("click", () => {
+      const paused = Game.pause();
+      document
+        .getElementById("overlay-pause")
+        .classList.toggle("hidden", !paused);
+      if (paused) {
+        AudioManager.stopBg();
+      } else {
+        AudioManager.playBg("race");
+      }
+    });
+  }
 
   // Resume button
-  document.getElementById("btn-resume").addEventListener("click", () => {
-    Game.setPaused(false);
-    document.getElementById("overlay-pause").classList.add("hidden");
-    AudioManager.playBg("race");
-  });
+  const resumeBtn = document.getElementById("btn-resume");
+  if (resumeBtn) {
+    resumeBtn.addEventListener("click", () => {
+      Game.setPaused(false);
+      document.getElementById("overlay-pause").classList.add("hidden");
+      AudioManager.playBg("race");
+    });
+  }
 
   // Restart from pause
-  document.getElementById("btn-restart-pause").addEventListener("click", () => {
-    document.getElementById("overlay-pause").classList.add("hidden");
-    Game.stop();
-    AudioManager.playSfx("start");
-    Game.start();
-  });
+  const restartPauseBtn = document.getElementById("btn-restart-pause");
+  if (restartPauseBtn) {
+    restartPauseBtn.addEventListener("click", () => {
+      document.getElementById("overlay-pause").classList.add("hidden");
+      Game.stop();
+      AudioManager.playSfx("start");
+      Game.start();
+    });
+  }
 
   // Home from pause
-  document.getElementById("btn-home-pause").addEventListener("click", () => {
-    document.getElementById("overlay-pause").classList.add("hidden");
-    Game.stop();
-    AudioManager.stopBg();
-    UI.showHome();
-    const high = Game.loadHighScore();
-    UI.updateHomeHighScore(high);
-  });
+  const homePauseBtn = document.getElementById("btn-home-pause");
+  if (homePauseBtn) {
+    homePauseBtn.addEventListener("click", () => {
+      document.getElementById("overlay-pause").classList.add("hidden");
+      Game.stop();
+      AudioManager.stopBg();
+      UI.showHome();
+      const high = Game.loadHighScore();
+      UI.updateHomeHighScore(high);
+    });
+  }
 
   // Mobile controls
   const btnLeft = document.getElementById("btn-left");
   const btnRight = document.getElementById("btn-right");
 
-  // Touch events with proper press/release
   const addTouchListeners = (btn, dir) => {
+    if (!btn) return;
     const start = (e) => {
       e.preventDefault();
       Game.setKey(dir, true);
@@ -131,55 +220,63 @@ function bindUIEvents() {
   addTouchListeners(btnLeft, "left");
   addTouchListeners(btnRight, "right");
 
-  // Keyboard shortcuts (for pause, handled in Game)
+  // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
     if (e.key === "p" || e.key === "P") {
-      // The Game module handles this, but we need to sync UI
-      setTimeout(() => {
-        const overlay = document.getElementById("overlay-pause");
-        const isPaused = Game.pause();
-        // Only show/hide if game is running
-        if (isPaused !== undefined) {
-          overlay.classList.toggle("hidden", !isPaused);
-          if (isPaused) {
-            AudioManager.stopBg();
-          } else {
-            AudioManager.playBg("race");
+      try {
+        setTimeout(() => {
+          const overlay = document.getElementById("overlay-pause");
+          const isPaused = Game.pause();
+          if (isPaused !== undefined) {
+            overlay.classList.toggle("hidden", !isPaused);
+            if (isPaused) {
+              AudioManager.stopBg();
+            } else {
+              AudioManager.playBg("race");
+            }
           }
-        }
-      }, 10);
+        }, 10);
+      } catch (err) {
+        // Silently fail
+      }
     }
   });
 
   // Game Over buttons
-  document.getElementById("btn-play-again").addEventListener("click", () => {
-    Game.stop();
-    AudioManager.playSfx("start");
-    Game.start();
-    UI.showGame();
-  });
+  const playAgainBtn = document.getElementById("btn-play-again");
+  if (playAgainBtn) {
+    playAgainBtn.addEventListener("click", () => {
+      Game.stop();
+      AudioManager.playSfx("start");
+      Game.start();
+      UI.showGame();
+    });
+  }
 
-  document.getElementById("btn-go-home").addEventListener("click", () => {
-    Game.stop();
-    AudioManager.stopBg();
-    UI.showHome();
-    const high = Game.loadHighScore();
-    UI.updateHomeHighScore(high);
+  const goHomeBtn = document.getElementById("btn-go-home");
+  if (goHomeBtn) {
+    goHomeBtn.addEventListener("click", () => {
+      Game.stop();
+      AudioManager.stopBg();
+      UI.showHome();
+      const high = Game.loadHighScore();
+      UI.updateHomeHighScore(high);
+    });
+  }
+
+  // ── Keyboard shortcut: Escape ──
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const modal = document.getElementById("modal-how");
+      if (modal && !modal.classList.contains("hidden")) {
+        UI.hideHowTo();
+      }
+      const pauseOverlay = document.getElementById("overlay-pause");
+      if (pauseOverlay && !pauseOverlay.classList.contains("hidden")) {
+        Game.setPaused(false);
+        pauseOverlay.classList.add("hidden");
+        AudioManager.playBg("race");
+      }
+    }
   });
 }
-
-// ── Keyboard shortcut: Escape to close modals ──
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
-    const modal = document.getElementById("modal-how");
-    if (!modal.classList.contains("hidden")) {
-      UI.hideHowTo();
-    }
-    const pauseOverlay = document.getElementById("overlay-pause");
-    if (!pauseOverlay.classList.contains("hidden")) {
-      Game.setPaused(false);
-      pauseOverlay.classList.add("hidden");
-      AudioManager.playBg("race");
-    }
-  }
-});
